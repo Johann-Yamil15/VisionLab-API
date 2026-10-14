@@ -16,5 +16,14 @@ public class Hallazgo
     public int NivelConfianza { get; set; }
 
     public string? ImagenBase64 { get; set; }
+
+    // Datos rápidos para la tarjeta (opcionales: hallazgos antiguos no los tienen).
+    public string? Habitat { get; set; }
+    public string? Alimentacion { get; set; }
+    public string? Colores { get; set; }
+    public string? Tamano { get; set; }
+
+    /// <summary>Frase corta y divertida que aparece al pie de la tarjeta.</summary>
+    public string? Lema { get; set; }
     public DateTime FechaCaptura { get; set; } = DateTime.UtcNow;
 }

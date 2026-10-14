@@ -17,6 +17,12 @@ public sealed class CrearHallazgoRequest
     public int NivelConfianza { get; init; }
 
     public string? ImagenBase64 { get; init; }
+
+    [MaxLength(80)] public string? Habitat { get; init; }
+    [MaxLength(80)] public string? Alimentacion { get; init; }
+    [MaxLength(80)] public string? Colores { get; init; }
+    [MaxLength(80)] public string? Tamano { get; init; }
+    [MaxLength(160)] public string? Lema { get; init; }
 }
 
 public sealed class CrearHallazgoHandler(
@@ -37,6 +43,11 @@ public sealed class CrearHallazgoHandler(
             Descripcion = request.Descripcion,
             NivelConfianza = request.NivelConfianza,
             ImagenBase64 = request.ImagenBase64,
+            Habitat = request.Habitat,
+            Alimentacion = request.Alimentacion,
+            Colores = request.Colores,
+            Tamano = request.Tamano,
+            Lema = request.Lema,
             FechaCaptura = DateTime.UtcNow
         };
 

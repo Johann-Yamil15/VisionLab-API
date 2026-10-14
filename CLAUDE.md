@@ -84,6 +84,8 @@ Mapeo Mongo: nombres de campo PascalCase heredados; `Usuario.Contrasena` ↔ cam
 | GET | /api/usuarios | perfil del usuario actual |
 | GET | /health | Healthy / 503 |
 Errores: ProblemDetails (RFC 9457).
+Hallazgo incluye datos rápidos opcionales: `habitat`, `alimentacion`, `colores`, `tamano`, `lema`
+(null en hallazgos antiguos; el front muestra "Por descubrir").
 
 ## Pendiente / deuda conocida
 - Contraseñas en texto plano y sin JWT → feature de seguridad.
@@ -98,3 +100,4 @@ Errores: ProblemDetails (RFC 9457).
 - 2026-10-14: creado este archivo. Repo en GitHub con `develop`/`main`, hook antisecretos.
 - 2026-10-14: `feature/jj-arquitectura-base`: migración a Clean Architecture (4 proyectos) sin
   cambiar el contrato; probado contra Mongo real (todos los endpoints OK).
+- 2026-10-14: campos opcionales de datos rápidos y lema en Hallazgo (request, entidad y DTO).
