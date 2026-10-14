@@ -1,6 +1,0 @@
-@VisionLabApi_HostAddress = http://localhost:5110
-
-GET {{VisionLabApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
