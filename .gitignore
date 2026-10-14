@@ -1,0 +1,26 @@
+# Build
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+publish/
+TestResults/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userprefs
+
+# Secretos y configuración local (nunca a git)
+.env
+.env.*
+!.env.example
+appsettings.*.local.json
+secrets.json
+
+# Sistema
+.DS_Store
+Thumbs.db
