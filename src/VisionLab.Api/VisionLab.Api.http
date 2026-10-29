@@ -1,0 +1,13 @@
+@host = https://localhost:44312
+
+GET {{host}}/health
+
+###
+GET {{host}}/api/hallazgos
+Accept: application/json
+
+###
+GET {{host}}/api/hallazgos/tipos/unique
+
+###
+GET {{host}}/api/usuarios
