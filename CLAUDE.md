@@ -82,7 +82,7 @@ Mapeo Mongo: nombres de campo PascalCase heredados; `Usuario.Contrasena` ↔ cam
 | GET | /api/hallazgos/tipo/{tipo} | igualdad case-insensitive (antes regex inyectable) |
 | GET | /api/hallazgos/tipos/unique | |
 | GET | /api/usuarios | perfil del usuario actual |
-| POST | /api/analisis | body `{imagen}` (data URL o base64; jpeg/png/webp ≤5 MB, validado por firma). Ejecuta `claude -p` (solo `--tools Read`, foto temporal que se borra). 200 ficha (+ `amenazas`, `impactoEcologico`, `peligro`, y `opciones` ×3 si `nivelConfianza` < 60) / 400 / 503 (CLI falla, >60 s o JSON inválido) |
+| POST | /api/analisis | body `{imagen}` (data URL o base64; jpeg/png/webp ≤5 MB, validado por firma). Ejecuta `claude -p` (solo `--tools Read`, foto temporal que se borra). 200 ficha (+ `amenazas`, `impactoEcologico`, `peligro`, y `opciones` ×3 (la 1.ª es la mejor identificación) si `nivelConfianza` < 60) / 400 / 503 (CLI falla, >60 s o JSON inválido) |
 | GET | /health | Healthy / 503 |
 Errores: ProblemDetails (RFC 9457).
 Hallazgo incluye datos rápidos opcionales: `habitat`, `alimentacion`, `colores`, `tamano`, `lema`
