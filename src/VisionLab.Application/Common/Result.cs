@@ -1,6 +1,6 @@
 namespace VisionLab.Application.Common;
 
-public enum ErrorType { Validation, NotFound, Conflict, Unauthorized }
+public enum ErrorType { Validation, NotFound, Conflict, Unauthorized, ServiceUnavailable }
 
 public sealed record Error(ErrorType Type, string Message);
 
