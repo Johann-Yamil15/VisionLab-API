@@ -1,3 +1,4 @@
+using VisionLab.Application.Features.Gamificacion;
 using VisionLab.Domain.Hallazgos;
 
 namespace VisionLab.Application.Features.Hallazgos;
@@ -18,6 +19,9 @@ public sealed record HallazgoDto(
     string? Tamano,
     string? Lema)
 {
+    /// <summary>Solo al crear: puntos, medallas y nivel ganados con este hallazgo.</summary>
+    public ProgresoDto? Progreso { get; init; }
+
     public static HallazgoDto From(Hallazgo h) =>
         new(h.Id, h.UsuarioId, h.Tipo, h.NombreComun, h.NombreCientifico, h.Descripcion,
             h.NivelConfianza, h.ImagenBase64, h.FechaCaptura,

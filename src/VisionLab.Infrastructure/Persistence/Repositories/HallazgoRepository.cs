@@ -16,6 +16,12 @@ internal sealed class HallazgoRepository(MongoContext db) : IHallazgoRepository
     public async Task<Hallazgo?> GetByIdAsync(string id, CancellationToken ct = default) =>
         await Hallazgos.Find(h => h.Id == id).FirstOrDefaultAsync(ct);
 
+    // Sin la imagen: solo se usa para calcular el progreso y las fotos pesan mucho.
+    public Task<List<Hallazgo>> GetByUsuarioAsync(string usuarioId, CancellationToken ct = default) =>
+        Hallazgos.Find(h => h.UsuarioId == usuarioId)
+            .Project<Hallazgo>(Builders<Hallazgo>.Projection.Exclude(h => h.ImagenBase64))
+            .ToListAsync(ct);
+
     // Igualdad con collation en lugar de regex: sin inyección de patrones y usa el índice.
     public Task<List<Hallazgo>> GetByTipoAsync(string tipo, CancellationToken ct = default) =>
         Hallazgos.Find(h => h.Tipo == tipo, new FindOptions { Collation = MongoContext.CaseInsensitive })
