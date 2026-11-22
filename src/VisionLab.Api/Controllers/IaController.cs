@@ -24,4 +24,16 @@ public sealed class IaController : ControllerBase
         var result = await handler.Handle(request, ct);
         return result.IsSuccess ? result.Value! : this.ToProblem(result.Error!);
     }
+
+    /// <summary>Responde una pregunta (máx. 300 caracteres) sobre la especie, en máximo 4 oraciones.</summary>
+    [HttpPost("chat")]
+    [ProducesResponseType<ChatRespuesta>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<ActionResult<ChatRespuesta>> Chat(
+        ChatRequest request, [FromServices] ChatExpertoHandler handler, CancellationToken ct)
+    {
+        var result = await handler.Handle(request, ct);
+        return result.IsSuccess ? result.Value! : this.ToProblem(result.Error!);
+    }
 }
