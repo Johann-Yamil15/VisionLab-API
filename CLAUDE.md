@@ -103,6 +103,9 @@ Hallazgo incluye datos rápidos opcionales: `habitat`, `alimentacion`, `colores`
 `ClaudeCliVisionAi` (prompt de 12–18 años + 12 categorías de `Application/Features/Ia/Categorias.cs`).
 Config `ClaudeCli:Command` (en Windows debe ser el .exe), `ClaudeCli:TimeoutSeconds` (60) y
 `ClaudeCli:Model` (`sonnet` por defecto; vacío = modelo predeterminado del CLI).
+El CLI corre "ligero" (`--strict-mcp-config`, `--disable-slash-commands`, `--setting-sources project`,
+`--no-session-persistence` y un `--system-prompt` corto): ~2.5 mil tokens por foto en vez de ~93 mil.
+No usar `--bare`: ignora la sesión iniciada del CLI y pide llave de API.
 Requiere `claude` instalado y con sesión iniciada en el servidor. Falla de IA → `ErrorType.ServiceUnavailable` → 503.
 
 ## Bitácora de cambios

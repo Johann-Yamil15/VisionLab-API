@@ -23,6 +23,10 @@ public sealed class ClaudeCliOptions
 /// <summary>Ejecuta <c>claude -p</c> como proceso hijo, con el prompt por stdin y sin shell.</summary>
 public sealed class ClaudeCliRunner(IOptions<ClaudeCliOptions> options, ILogger<ClaudeCliRunner> logger)
 {
+    private const string SystemPrompt =
+        "Eres el motor de identificación científica de OmniScan. Sigue al pie de la letra las " +
+        "instrucciones del usuario. Si te piden analizar una imagen, ábrela con la herramienta Read.";
+
     /// <param name="prompt">Texto que se envía por stdin.</param>
     /// <param name="tools">Herramientas que se le permiten al CLI ("Read" o "" para ninguna).</param>
     /// <param name="workDir">Directorio de trabajo (carpeta temporal de la petición).</param>
@@ -52,6 +56,16 @@ public sealed class ClaudeCliRunner(IOptions<ClaudeCliOptions> options, ILogger<
             psi.ArgumentList.Add("--model");
             psi.ArgumentList.Add(opts.Model);
         }
+        // CLI "ligero": sin MCP, skills, plugins ni configuración del usuario, y con un system prompt
+        // corto en lugar del de Claude Code. Medido con una foto: ~93 mil tokens → ~2.5 mil por llamada
+        // y de ~14 s a ~5 s. Las instrucciones de la tarea siguen llegando por stdin.
+        psi.ArgumentList.Add("--strict-mcp-config");
+        psi.ArgumentList.Add("--disable-slash-commands");
+        psi.ArgumentList.Add("--setting-sources");
+        psi.ArgumentList.Add("project");
+        psi.ArgumentList.Add("--no-session-persistence");
+        psi.ArgumentList.Add("--system-prompt");
+        psi.ArgumentList.Add(SystemPrompt);
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
         timeout.CancelAfter(TimeSpan.FromSeconds(opts.TimeoutSeconds));
