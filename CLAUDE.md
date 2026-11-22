@@ -82,6 +82,7 @@ Mapeo Mongo: nombres de campo PascalCase heredados; `Usuario.Contrasena` ↔ cam
 | GET | /api/hallazgos/tipo/{tipo} | igualdad case-insensitive (antes regex inyectable) |
 | GET | /api/hallazgos/tipos/unique | |
 | GET | /api/usuarios | perfil del usuario actual |
+| POST | /api/analisis | body `{imagen}` (data URL o base64; jpeg/png/webp ≤5 MB, validado por firma). Ejecuta `claude -p` (solo `--tools Read`, foto temporal que se borra). 200 ficha (+ `amenazas`, `impactoEcologico`, `peligro`, y `opciones` ×3 (la 1.ª es la mejor identificación) si `nivelConfianza` < 60) / 400 / 503 (CLI falla, >60 s o JSON inválido) |
 | GET | /health | Healthy / 503 |
 Errores: ProblemDetails (RFC 9457).
 Hallazgo incluye datos rápidos opcionales: `habitat`, `alimentacion`, `colores`, `tamano`, `lema`
@@ -96,7 +97,14 @@ Hallazgo incluye datos rápidos opcionales: `habitat`, `alimentacion`, `colores`
 - Docker: `Dockerfile`, `.dockerignore`, `docker-compose.yml` existen en disco SIN commit; pendiente de aprobación.
 - Proyecto de tests.
 
+## IA con el CLI de Claude (OMNI-10/11)
+`Infrastructure/Ai`: `ClaudeCliRunner` (proceso hijo, prompt por stdin, timeout, mata el árbol) y
+`ClaudeCliVisionAi` (prompt de 12–18 años + 12 categorías de `Application/Features/Ia/Categorias.cs`).
+Config `ClaudeCli:Command` (en Windows debe ser el .exe) y `ClaudeCli:TimeoutSeconds` (60).
+Requiere `claude` instalado y con sesión iniciada en el servidor. Falla de IA → `ErrorType.ServiceUnavailable` → 503.
+
 ## Bitácora de cambios
+- OMNI-10: `POST /api/analisis` con el CLI de Claude (sin JWT todavía; la rama de auth se descartó).
 - 2026-10-14: creado este archivo. Repo en GitHub con `develop`/`main`, hook antisecretos.
 - 2026-10-14: `feature/jj-arquitectura-base`: migración a Clean Architecture (4 proyectos) sin
   cambiar el contrato; probado contra Mongo real (todos los endpoints OK).

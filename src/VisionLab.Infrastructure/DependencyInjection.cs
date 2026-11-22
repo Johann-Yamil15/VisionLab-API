@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using VisionLab.Application.Abstractions;
+using VisionLab.Infrastructure.Ai;
 using VisionLab.Infrastructure.Persistence;
 using VisionLab.Infrastructure.Persistence.Repositories;
 
@@ -29,6 +30,10 @@ public static class DependencyInjection
         services.AddSingleton<IHallazgoRepository, HallazgoRepository>();
         services.AddSingleton<ILogroRepository, LogroRepository>();
         services.AddSingleton<INivelRepository, NivelRepository>();
+
+        services.Configure<ClaudeCliOptions>(configuration.GetSection(ClaudeCliOptions.SectionName));
+        services.AddSingleton<ClaudeCliRunner>();
+        services.AddSingleton<IVisionAi, ClaudeCliVisionAi>();
 
         services.AddHostedService<MongoIndexesInitializer>();
         services.AddHealthChecks().AddCheck<MongoHealthCheck>("mongodb");
