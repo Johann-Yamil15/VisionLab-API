@@ -10,4 +10,7 @@ public interface IVisionAi
 {
     /// <exception cref="IaNoDisponibleException">La IA no pudo responder.</exception>
     Task<AnalisisDto> AnalizarAsync(byte[] imagen, string extension, CancellationToken ct);
+
+    /// <exception cref="IaNoDisponibleException">La IA no pudo responder.</exception>
+    Task<string> ChatAsync(EspecieChat especie, string pregunta, CancellationToken ct);
 }
