@@ -91,8 +91,10 @@ public sealed class ClaudeCliVisionAi(ClaudeCliRunner cli) : IVisionAi
         - amenazas: qué amenaza a la especie o al elemento (máximo 200 caracteres); "No aplica" si no hay.
         - impactoEcologico: qué papel cumple en su ecosistema o entorno (máximo 200 caracteres).
         - peligro: exactamente "Bajo", "Medio" o "Alto" (qué tan peligroso es para una persona).
-        - opciones: lista vacía si nivelConfianza es 60 o más. Si es menor a 60, EXACTAMENTE 3 identificaciones
-          alternativas, cada una con tipo (una de las 12 categorías), nombreComun y nombreCientifico.
+        - opciones: lista vacía si nivelConfianza es 60 o más. Si es menor a 60, EXACTAMENTE 3 posibles
+          identificaciones para que el usuario elija. La PRIMERA debe ser tu mejor identificación (la misma de
+          nombreComun) y las otras 2 alternativas distintas. Cada una con tipo (una de las 12 categorías),
+          nombreComun y nombreCientifico.
 
         Responde SOLO con un objeto JSON válido con esas claves, sin texto adicional ni bloques de código.
         """;
