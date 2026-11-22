@@ -15,6 +15,9 @@ public sealed class ClaudeCliOptions
 
     /// <summary>Tiempo máximo por llamada; pasado esto se mata el proceso y se responde 503.</summary>
     public int TimeoutSeconds { get; set; } = 60;
+
+    /// <summary>Modelo del CLI (alias como "sonnet" o "haiku"). Vacío = el predeterminado del CLI.</summary>
+    public string Model { get; set; } = "sonnet";
 }
 
 /// <summary>Ejecuta <c>claude -p</c> como proceso hijo, con el prompt por stdin y sin shell.</summary>
@@ -43,6 +46,12 @@ public sealed class ClaudeCliRunner(IOptions<ClaudeCliOptions> options, ILogger<
         psi.ArgumentList.Add("-p");
         psi.ArgumentList.Add("--tools");
         psi.ArgumentList.Add(tools);
+        // Sonnet basta para identificar especies: responde más rápido y gasta menos uso que Opus.
+        if (!string.IsNullOrWhiteSpace(opts.Model))
+        {
+            psi.ArgumentList.Add("--model");
+            psi.ArgumentList.Add(opts.Model);
+        }
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
         timeout.CancelAfter(TimeSpan.FromSeconds(opts.TimeoutSeconds));

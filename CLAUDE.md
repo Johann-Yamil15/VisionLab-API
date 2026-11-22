@@ -101,7 +101,8 @@ Hallazgo incluye datos rápidos opcionales: `habitat`, `alimentacion`, `colores`
 ## IA con el CLI de Claude (OMNI-10/11)
 `Infrastructure/Ai`: `ClaudeCliRunner` (proceso hijo, prompt por stdin, timeout, mata el árbol) y
 `ClaudeCliVisionAi` (prompt de 12–18 años + 12 categorías de `Application/Features/Ia/Categorias.cs`).
-Config `ClaudeCli:Command` (en Windows debe ser el .exe) y `ClaudeCli:TimeoutSeconds` (60).
+Config `ClaudeCli:Command` (en Windows debe ser el .exe), `ClaudeCli:TimeoutSeconds` (60) y
+`ClaudeCli:Model` (`sonnet` por defecto; vacío = modelo predeterminado del CLI).
 Requiere `claude` instalado y con sesión iniciada en el servidor. Falla de IA → `ErrorType.ServiceUnavailable` → 503.
 
 ## Bitácora de cambios
