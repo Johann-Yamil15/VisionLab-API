@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "VisionLab.Domain": {
+      "commandName": "Project"
+    },
+    "Perfil 1": {
+      "commandName": "Executable",
+      "executablePath": "C:\\VisionLab\\VisionLab-API\\src\\VisionLab.Api\\VisionLab.Api.csproj"
+    }
+  }
+}
