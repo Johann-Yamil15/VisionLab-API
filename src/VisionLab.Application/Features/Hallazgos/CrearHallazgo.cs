@@ -53,9 +53,10 @@ public sealed class CrearHallazgoHandler(
 
         await hallazgos.CreateAsync(hallazgo, ct);
 
-        if (hallazgo.UsuarioId != UsuarioAnonimo)
-            await progreso.Handle(hallazgo.UsuarioId, hallazgo, ct);
+        var ganado = hallazgo.UsuarioId != UsuarioAnonimo
+            ? await progreso.Handle(hallazgo.UsuarioId, hallazgo, ct)
+            : null;
 
-        return HallazgoDto.From(hallazgo);
+        return HallazgoDto.From(hallazgo) with { Progreso = ganado };
     }
 }

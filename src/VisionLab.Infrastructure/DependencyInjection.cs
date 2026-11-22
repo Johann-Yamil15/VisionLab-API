@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddSingleton<IVisionAi, ClaudeCliVisionAi>();
 
         services.AddHostedService<MongoIndexesInitializer>();
+        services.AddHostedService<GamificacionSeeder>();
         services.AddHealthChecks().AddCheck<MongoHealthCheck>("mongodb");
 
         return services;

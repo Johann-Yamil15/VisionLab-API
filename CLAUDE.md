@@ -77,11 +77,11 @@ Mapeo Mongo: nombres de campo PascalCase heredados; `Usuario.Contrasena` ↔ cam
 | POST | /api/auth/login | body `{email,contraseña}` → 200 / 401 |
 | GET | /api/hallazgos | TODOS (aún sin filtrar por usuario) |
 | GET | /api/hallazgos/{id} | id de 24 caracteres |
-| POST | /api/hallazgos | usuarioId del body se IGNORA; usa ICurrentUser |
+| POST | /api/hallazgos | usuarioId del body se IGNORA; usa ICurrentUser. La respuesta trae `progreso` (puntosGanados, medallasNuevas, nivelNuevo) para los toasts |
 | DELETE | /api/hallazgos/{id} | 204 / 404 |
 | GET | /api/hallazgos/tipo/{tipo} | igualdad case-insensitive (antes regex inyectable) |
 | GET | /api/hallazgos/tipos/unique | |
-| GET | /api/usuarios | perfil del usuario actual |
+| GET | /api/usuarios | perfil: puntos, `nivel` (actual, siguiente, porcentaje, faltan), `descubrimientos` y `medallas` (progreso real calculado con los hallazgos) |
 | POST | /api/analisis | body `{imagen}` (data URL o base64; jpeg/png/webp ≤5 MB, validado por firma). Ejecuta `claude -p` (solo `--tools Read`, foto temporal que se borra). 200 ficha (+ `amenazas`, `impactoEcologico`, `peligro`, y `opciones` ×3 (la 1.ª es la mejor identificación) si `nivelConfianza` < 60) / 400 / 503 (CLI falla, >60 s o JSON inválido) |
 | POST | /api/chat | body `{especie:{nombreComun,nombreCientifico,descripcion},pregunta}` (≤300 car.) → `{respuesta}` / 400 / 503 |
 | GET | /health | Healthy / 503 |
@@ -109,6 +109,7 @@ No usar `--bare`: ignora la sesión iniciada del CLI y pide llave de API.
 Requiere `claude` instalado y con sesión iniciada en el servidor. Falla de IA → `ErrorType.ServiceUnavailable` → 503.
 
 ## Bitácora de cambios
+- Perfil real: `Domain/Gamificacion/Catalogo.cs` (5 rangos del documento y 5 medallas) se siembra en Mongo al arrancar (`GamificacionSeeder`, upsert por Numero/Clave). Medallas por hallazgos totales, especies, categorías y fauna (`Estadisticas`).
 - OMNI-11: `POST /api/chat` (especie + pregunta ≤300 car. → `{respuesta}`, CLI sin herramientas, ≤4 oraciones, 503 igual que análisis).
 - OMNI-10: `POST /api/analisis` con el CLI de Claude (sin JWT todavía; la rama de auth se descartó).
 - 2026-10-14: creado este archivo. Repo en GitHub con `develop`/`main`, hook antisecretos.
