@@ -1,10 +1,17 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using VisionLab.Api.Common;
 using VisionLab.Api.Security;
 using VisionLab.Application;
 using VisionLab.Application.Abstractions;
 using VisionLab.Infrastructure;
+using VisionLab.Infrastructure.Security;
 
 const string CorsPolicy = "Frontend";
 
@@ -14,9 +21,40 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// --- Usuario actual (temporal: demo; se reemplaza por JWT) ---
-builder.Services.Configure<DemoUserOptions>(builder.Configuration.GetSection(DemoUserOptions.SectionName));
-builder.Services.AddScoped<ICurrentUser, DemoCurrentUser>();
+// --- Autenticación JWT: el usuario actual sale del token ---
+var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, JwtCurrentUser>();
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+    {
+        o.MapInboundClaims = false; // conserva "sub" tal cual
+        o.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwt.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwt.Audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1),
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key.Length >= 32 ? jwt.Key : new string('x', 32)))
+        };
+    });
+builder.Services.AddAuthorization();
+
+// --- Límites de uso: la IA cuesta y login/registro son blanco de fuerza bruta ---
+builder.Services.AddRateLimiter(o =>
+{
+    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.AddPolicy(RateLimitPolicies.Ia, ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "anon",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1) }));
+    o.AddPolicy(RateLimitPolicies.Auth, ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "anon",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
+});
 
 // --- API ---
 builder.Services.AddControllers()
@@ -70,7 +108,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors(CorsPolicy);
+app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 app.MapHealthChecks("/health");

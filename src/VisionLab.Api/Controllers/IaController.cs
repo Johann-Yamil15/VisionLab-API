@@ -1,10 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using VisionLab.Api.Common;
 using VisionLab.Application.Features.Ia;
 
 namespace VisionLab.Api.Controllers;
 
 [ApiController]
+[Authorize]
+[EnableRateLimiting(RateLimitPolicies.Ia)]
 [Route("api")]
 [Produces("application/json")]
 public sealed class IaController : ControllerBase

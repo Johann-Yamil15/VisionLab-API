@@ -7,7 +7,7 @@ public class Usuario
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
-    /// Contraseña heredada en texto plano. Se reemplaza por un hash en la feature de seguridad.
+    /// Hash BCrypt de la contraseña. Las cuentas heredadas en texto plano se migran a hash en su primer login.
     /// </summary>
     public string Contrasena { get; set; } = string.Empty;
 

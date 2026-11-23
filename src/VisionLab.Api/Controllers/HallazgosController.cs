@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VisionLab.Application.Features.Hallazgos;
 
 namespace VisionLab.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 [Produces("application/json")]
 public sealed class HallazgosController : ControllerBase

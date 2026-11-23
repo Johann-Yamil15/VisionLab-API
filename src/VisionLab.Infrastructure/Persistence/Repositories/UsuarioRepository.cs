@@ -18,6 +18,11 @@ internal sealed class UsuarioRepository(MongoContext db) : IUsuarioRepository
     public Task CreateAsync(Usuario usuario, CancellationToken ct = default) =>
         Usuarios.InsertOneAsync(usuario, cancellationToken: ct);
 
+    public Task SetContrasenaAsync(string id, string contrasenaHash, CancellationToken ct = default) =>
+        Usuarios.UpdateOneAsync(u => u.Id == id,
+            Builders<Usuario>.Update.Set(u => u.Contrasena, contrasenaHash),
+            cancellationToken: ct);
+
     public Task AddProgressAsync(string id, int puntos, int hallazgos, CancellationToken ct = default) =>
         Usuarios.UpdateOneAsync(u => u.Id == id,
             Builders<Usuario>.Update.Inc(u => u.Puntos, puntos).Inc(u => u.HallazgosContador, hallazgos),
