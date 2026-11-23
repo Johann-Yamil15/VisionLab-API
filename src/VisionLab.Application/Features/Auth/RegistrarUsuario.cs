@@ -19,23 +19,23 @@ public sealed class RegistrarUsuarioRequest
     public string Contrasena { get; init; } = string.Empty;
 }
 
-public sealed class RegistrarUsuarioHandler(IUsuarioRepository usuarios)
+public sealed class RegistrarUsuarioHandler(IUsuarioRepository usuarios, IPasswordHasher hasher, ITokenService tokens)
 {
-    public async Task<Result<UsuarioDto>> Handle(RegistrarUsuarioRequest request, CancellationToken ct)
+    public async Task<Result<SesionDto>> Handle(RegistrarUsuarioRequest request, CancellationToken ct)
     {
         var email = request.Email.Trim().ToLowerInvariant();
 
         if (await usuarios.GetByEmailAsync(email, ct) is not null)
-            return Result<UsuarioDto>.Failure(ErrorType.Conflict, "El email ya está registrado.");
+            return Result<SesionDto>.Failure(ErrorType.Conflict, "El email ya está registrado.");
 
         var usuario = new Usuario
         {
             NombreUsuario = request.NombreUsuario.Trim(),
             Email = email,
-            Contrasena = request.Contrasena
+            Contrasena = hasher.Hash(request.Contrasena)
         };
 
         await usuarios.CreateAsync(usuario, ct);
-        return Result<UsuarioDto>.Success(UsuarioDto.From(usuario));
+        return Result<SesionDto>.Success(new SesionDto(tokens.Crear(usuario), UsuarioDto.From(usuario)));
     }
 }

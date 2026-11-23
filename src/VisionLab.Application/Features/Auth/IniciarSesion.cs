@@ -15,15 +15,22 @@ public sealed class IniciarSesionRequest
     public string Contrasena { get; init; } = string.Empty;
 }
 
-public sealed class IniciarSesionHandler(IUsuarioRepository usuarios)
+public sealed class IniciarSesionHandler(IUsuarioRepository usuarios, IPasswordHasher hasher, ITokenService tokens)
 {
-    public async Task<Result<UsuarioDto>> Handle(IniciarSesionRequest request, CancellationToken ct)
+    public async Task<Result<SesionDto>> Handle(IniciarSesionRequest request, CancellationToken ct)
     {
         var usuario = await usuarios.GetByEmailAsync(request.Email.Trim().ToLowerInvariant(), ct);
 
-        if (usuario is null || usuario.Contrasena != request.Contrasena)
-            return Result<UsuarioDto>.Failure(ErrorType.Unauthorized, "Credenciales inválidas.");
+        if (usuario is null || !hasher.Verify(request.Contrasena, usuario.Contrasena))
+            return Result<SesionDto>.Failure(ErrorType.Unauthorized, "Credenciales inválidas.");
 
-        return Result<UsuarioDto>.Success(UsuarioDto.From(usuario));
+        // Usuarios heredados con contraseña en texto plano: se migran a hash en su primer login.
+        if (hasher.NecesitaMigrar(usuario.Contrasena))
+        {
+            usuario.Contrasena = hasher.Hash(request.Contrasena);
+            await usuarios.SetContrasenaAsync(usuario.Id, usuario.Contrasena, ct);
+        }
+
+        return Result<SesionDto>.Success(new SesionDto(tokens.Crear(usuario), UsuarioDto.From(usuario)));
     }
 }

@@ -14,10 +14,10 @@ Concurso: Rehilete Pachuca. Fecha límite aprox.: **2026-10-29**.
 ## Decisiones
 - **Monolito** (un solo despliegue) con **Clean Architecture** + **vertical slices** en Application.
 - **Stateless** para escalar horizontalmente: nada de estado en memoria; todo en Mongo; usuario
-  por JWT (pendiente). `/health` para balanceadores. Config por variables de entorno.
+  por JWT. `/health` para balanceadores. Config por variables de entorno.
 - **MongoDB** única base de datos. Imágenes irán a **GridFS** (mismo Mongo).
 - Gemini se llama SOLO desde aquí. Key en `dotnet user-secrets` (dev) o `Gemini__ApiKey` (prod).
-- Auth: BCrypt + JWT (pendiente). El `usuarioId` sale del token, nunca del body.
+- Auth: BCrypt + JWT (HS256, 7 días, clave `Jwt:Key` ≥32 car.: en Development hay una de prueba en `appsettings.Development.json`; en producción `Jwt__Key`). El `usuarioId` sale del claim `sub`, nunca del body. Login/registro con límite de 10 intentos/min por IP; `/api/analisis` y `/api/chat` con 20/min por usuario (429).
 - Sin MediatR (licencia comercial desde v13): cada caso de uso es una clase `*Handler` que se
   registra sola por reflexión (`Application/DependencyInjection.cs`).
 
@@ -62,7 +62,7 @@ src/
   VisionLab.Api/               → Application + Infrastructure
     Controllers/               Auth, Hallazgos, Usuarios (delgados, [FromServices] handler)
     Common/ResultExtensions.cs Error → ProblemDetails
-    Security/DemoCurrentUser   ICurrentUser TEMPORAL (DemoUser:Id de appsettings)
+    Security/JwtCurrentUser    ICurrentUser: lee el claim `sub` del JWT validado
     Program.cs                 CORS desde Cors:AllowedOrigins, ProblemDetails, ForwardedHeaders,
                                Swagger (solo Development), /health
 ```
@@ -73,9 +73,9 @@ Mapeo Mongo: nombres de campo PascalCase heredados; `Usuario.Contrasena` ↔ cam
 ## Endpoints (contrato igual al heredado; JSON camelCase)
 | Método | Ruta | Notas |
 |---|---|---|
-| POST | /api/auth/register | body `{nombreUsuario,email,contraseña}` → 201 / 409 |
-| POST | /api/auth/login | body `{email,contraseña}` → 200 / 401 |
-| GET | /api/hallazgos | TODOS (aún sin filtrar por usuario) |
+| POST | /api/auth/register | body `{nombreUsuario,email,contraseña}` → 201 `{token, usuario}` / 409 (público) |
+| POST | /api/auth/login | body `{email,contraseña}` → 200 `{token, usuario}` / 401 (público; migra a hash las contraseñas heredadas en texto plano) |
+| GET | /api/hallazgos | los del usuario autenticado (todas las consultas de hallazgos van acotadas por dueño) |
 | GET | /api/hallazgos/{id} | id de 24 caracteres |
 | POST | /api/hallazgos | usuarioId del body se IGNORA; usa ICurrentUser. La respuesta trae `progreso` (puntosGanados, medallasNuevas, nivelNuevo) para los toasts |
 | DELETE | /api/hallazgos/{id} | 204 / 404 |
@@ -90,8 +90,7 @@ Hallazgo incluye datos rápidos opcionales: `habitat`, `alimentacion`, `colores`
 (null en hallazgos antiguos; el front muestra "Por descubrir").
 
 ## Pendiente / deuda conocida
-- Contraseñas en texto plano y sin JWT → feature de seguridad.
-- GET hallazgos devuelve los de todos → filtrar por usuario con JWT.
+- Hallazgos creados antes del login (usuario demo / `anonymous`) no pertenecen a ninguna cuenta nueva.
 - Datos con `Tipo` inconsistente ("insecto"/"Insecto", "etc") → normalizar en el análisis.
 - Imágenes base64 dentro del documento → GridFS + miniaturas.
 - Tarjetas sin duplicados, endpoints de Gemini (/api/analisis, /api/chat), rate limiting.
@@ -111,7 +110,8 @@ Requiere `claude` instalado y con sesión iniciada en el servidor. Falla de IA �
 ## Bitácora de cambios
 - Perfil real: `Domain/Gamificacion/Catalogo.cs` (5 rangos del documento y 5 medallas) se siembra en Mongo al arrancar (`GamificacionSeeder`, upsert por Numero/Clave). Medallas por hallazgos totales, especies, categorías y fauna (`Estadisticas`).
 - OMNI-11: `POST /api/chat` (especie + pregunta ≤300 car. → `{respuesta}`, CLI sin herramientas, ≤4 oraciones, 503 igual que análisis).
-- OMNI-10: `POST /api/analisis` con el CLI de Claude (sin JWT todavía; la rama de auth se descartó).
+- Login: JWT + BCrypt (`Infrastructure/Security`), `[Authorize]` en Hallazgos, Usuarios y la IA, rate limiting, hallazgos acotados por dueño. Se quitó `DemoCurrentUser`/`DemoUser`. Recuperado del stash `auth-jwt-gemini` sin la parte de Gemini.
+- OMNI-10: `POST /api/analisis` con el CLI de Claude.
 - 2026-10-14: creado este archivo. Repo en GitHub con `develop`/`main`, hook antisecretos.
 - 2026-10-14: `feature/jj-arquitectura-base`: migración a Clean Architecture (4 proyectos) sin
   cambiar el contrato; probado contra Mongo real (todos los endpoints OK).
