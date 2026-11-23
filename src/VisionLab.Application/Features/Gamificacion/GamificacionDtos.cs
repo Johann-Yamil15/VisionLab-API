@@ -42,4 +42,5 @@ public sealed record MedallaDto(
 }
 
 /// <summary>Lo que ganó el usuario con un hallazgo nuevo (para las notificaciones del front).</summary>
-public sealed record ProgresoDto(int PuntosGanados, IReadOnlyList<MedallaDto> MedallasNuevas, NivelDto? NivelNuevo);
+/// <param name="Veces">Capturas de esta especie contando la nueva; si es mayor que 1 es repetida y no da puntos.</param>
+public sealed record ProgresoDto(int PuntosGanados, IReadOnlyList<MedallaDto> MedallasNuevas, NivelDto? NivelNuevo, int Veces = 1);
