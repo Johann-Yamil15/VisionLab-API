@@ -26,7 +26,7 @@ public sealed record Estadisticas(int Total, int Especies, int Categorias, int F
     }
 
     /// <summary>Misma especie = mismo nombre científico (o común si no tiene), sin importar mayúsculas.</summary>
-    private static string ClaveEspecie(Hallazgo h) =>
+    public static string ClaveEspecie(Hallazgo h) =>
         (string.IsNullOrWhiteSpace(h.NombreCientifico) ? h.NombreComun : h.NombreCientifico)
         .Trim().ToLowerInvariant();
 }

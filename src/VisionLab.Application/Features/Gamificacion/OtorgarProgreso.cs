@@ -16,13 +16,19 @@ public sealed class OtorgarProgresoHandler(
 {
     public async Task<ProgresoDto> Handle(string usuarioId, Hallazgo hallazgo, CancellationToken ct)
     {
-        var puntos = ReglasDePuntos.PorHallazgo(hallazgo);
+        // La lista ya incluye el hallazgo recién guardado.
+        var todos = await hallazgos.GetByUsuarioAsync(usuarioId, ct);
+        var clave = Estadisticas.ClaveEspecie(hallazgo);
+        var veces = Math.Max(1, todos.Count(h => Estadisticas.ClaveEspecie(h) == clave));
+
+        // Repetida: la foto se guarda en su galería pero no da puntos (evita farmear XP).
+        var puntos = veces > 1 ? 0 : ReglasDePuntos.PorHallazgo(hallazgo);
         await usuarios.AddProgressAsync(usuarioId, puntos, 1, ct);
 
         var usuario = await usuarios.GetByIdAsync(usuarioId, ct);
-        if (usuario is null) return new ProgresoDto(puntos, [], null);
+        if (usuario is null) return new ProgresoDto(puntos, [], null, veces);
 
-        var stats = Estadisticas.De(await hallazgos.GetByUsuarioAsync(usuarioId, ct), usuario.HallazgosContador);
+        var stats = Estadisticas.De(todos, usuario.HallazgosContador);
         var nuevas = (await logros.GetPendientesAsync(usuario.LogrosDesbloqueados, ct))
             .Where(l => l.EstaCumplidoPor(stats))
             .ToList();
@@ -43,6 +49,6 @@ public sealed class OtorgarProgresoHandler(
             nivelNuevo = NivelDto.De(nivel);
         }
 
-        return new ProgresoDto(puntos, nuevas.Select(l => MedallaDto.De(l, stats, true)).ToList(), nivelNuevo);
+        return new ProgresoDto(puntos, nuevas.Select(l => MedallaDto.De(l, stats, true)).ToList(), nivelNuevo, veces);
     }
 }
