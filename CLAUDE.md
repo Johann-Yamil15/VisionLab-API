@@ -77,12 +77,12 @@ Mapeo Mongo: nombres de campo PascalCase heredados; `Usuario.Contrasena` ↔ cam
 | POST | /api/auth/login | body `{email,contraseña}` → 200 `{token, usuario}` / 401 (público; migra a hash las contraseñas heredadas en texto plano) |
 | GET | /api/hallazgos | los del usuario autenticado (todas las consultas de hallazgos van acotadas por dueño) |
 | GET | /api/hallazgos/{id} | id de 24 caracteres |
-| POST | /api/hallazgos | usuarioId del body se IGNORA; usa ICurrentUser. La respuesta trae `progreso` (puntosGanados, medallasNuevas, nivelNuevo) para los toasts |
+| POST | /api/hallazgos | usuarioId del body se IGNORA; usa ICurrentUser. La respuesta trae `progreso` (puntosGanados, medallasNuevas, nivelNuevo) para los toasts. Acepta y devuelve la ubicación de la especie para el Atlas personal: `grupoAtlas` (fauna/flora/mineral), `region`, `latitud`, `longitud` (todo o nada: `UbicacionAtlas.Sanear`; sin grupo válido o con coordenadas fuera de rango se guardan nulos) |
 | DELETE | /api/hallazgos/{id} | 204 / 404 |
 | GET | /api/hallazgos/tipo/{tipo} | igualdad case-insensitive (antes regex inyectable) |
 | GET | /api/hallazgos/tipos/unique | |
 | GET | /api/usuarios | perfil: puntos, `nivel` (actual, siguiente, porcentaje, faltan), `descubrimientos` y `medallas` (progreso real calculado con los hallazgos) |
-| POST | /api/analisis | body `{imagen}` (data URL o base64; jpeg/png/webp ≤5 MB, validado por firma). Ejecuta `claude -p` (solo `--tools Read`, foto temporal que se borra). 200 ficha (+ `amenazas`, `impactoEcologico`, `peligro`, y `opciones` ×3 (la 1.ª es la mejor identificación) si `nivelConfianza` < 60) / 400 / 503 (CLI falla, >60 s o JSON inválido) |
+| POST | /api/analisis | body `{imagen}` (data URL o base64; jpeg/png/webp ≤5 MB, validado por firma). Ejecuta `claude -p` (solo `--tools Read`, foto temporal que se borra). 200 ficha (+ `amenazas`, `impactoEcologico`, `peligro`, y `opciones` ×3 (la 1.ª es la mejor identificación) si `nivelConfianza` < 60; más `grupoAtlas`, `region`, `latitud`, `longitud`: dónde vive la especie, no dónde se tomó la foto, vacíos si es un objeto o algo que no se puede ubicar) / 400 / 503 (CLI falla, >60 s o JSON inválido) |
 | POST | /api/chat | body `{especie:{nombreComun,nombreCientifico,descripcion},pregunta}` (≤300 car.) → `{respuesta}` / 400 / 503 |
 | GET | /health | Healthy / 503 |
 Errores: ProblemDetails (RFC 9457).
@@ -108,6 +108,7 @@ No usar `--bare`: ignora la sesión iniciada del CLI y pide llave de API.
 Requiere `claude` instalado y con sesión iniciada en el servidor. Falla de IA → `ErrorType.ServiceUnavailable` → 503.
 
 ## Bitácora de cambios
+- Atlas personal: el análisis devuelve `grupoAtlas`/`region`/`latitud`/`longitud` (prompt + `UbicacionAtlas.Sanear`) y el hallazgo los guarda (`Hallazgo`, `CrearHallazgoRequest`, `HallazgoDto`). Los hallazgos anteriores no los tienen. Con la IA real: canguro → Australia, baobab → Madagascar, amatista → Brasil/Uruguay, oso polar → Ártico; un fondo de laboratorio → sin ubicación.
 - Perfil real: `Domain/Gamificacion/Catalogo.cs` (5 rangos del documento y 5 medallas) se siembra en Mongo al arrancar (`GamificacionSeeder`, upsert por Numero/Clave). Medallas por hallazgos totales, especies, categorías y fauna (`Estadisticas`).
 - OMNI-11: `POST /api/chat` (especie + pregunta ≤300 car. → `{respuesta}`, CLI sin herramientas, ≤4 oraciones, 503 igual que análisis).
 - Login: JWT + BCrypt (`Infrastructure/Security`), `[Authorize]` en Hallazgos, Usuarios y la IA, rate limiting, hallazgos acotados por dueño. Se quitó `DemoCurrentUser`/`DemoUser`. Recuperado del stash `auth-jwt-gemini` sin la parte de Gemini.

@@ -115,6 +115,13 @@ public sealed class ClaudeCliVisionAi(ClaudeCliRunner cli) : IVisionAi
         - amenazas: qué amenaza a la especie o al elemento (máximo 200 caracteres); "No aplica" si no hay.
         - impactoEcologico: qué papel cumple en su ecosistema o entorno (máximo 200 caracteres).
         - peligro: exactamente "Bajo", "Medio" o "Alto" (qué tan peligroso es para una persona).
+        - grupoAtlas: para ubicar el hallazgo en un mapa del mundo: "fauna" (animales de cualquier tipo: insectos, aves,
+          peces, mamíferos), "flora" (plantas y hongos), "mineral" (rocas, minerales, cristales, fósiles). Cadena vacía si es
+          un objeto, un fenómeno, un material hecho por personas o algo que no se pueda ubicar en el mapa.
+        - region: lugar donde vive o se encuentra de forma natural la especie o el material, máximo 6 palabras
+          (por ejemplo "Selva Amazónica, Brasil"). NO es el lugar donde se tomó la foto. Vacía si grupoAtlas está vacío.
+        - latitud y longitud: números decimales de UN punto representativo de esa región (latitud de -90 a 90, longitud de
+          -180 a 180). Usa null en ambas si grupoAtlas está vacío o no estás seguro de la región.
         - opciones: lista vacía si nivelConfianza es 60 o más. Si es menor a 60, EXACTAMENTE 3 posibles
           identificaciones para que el usuario elija. La PRIMERA debe ser tu mejor identificación (la misma de
           nombreComun) y las otras 2 alternativas distintas. Cada una con tipo (una de las 12 categorías),
