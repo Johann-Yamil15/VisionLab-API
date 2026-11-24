@@ -25,5 +25,13 @@ public class Hallazgo
 
     /// <summary>Frase corta y divertida que aparece al pie de la tarjeta.</summary>
     public string? Lema { get; set; }
+    // Dónde vive la especie (no dónde se tomó la foto): sirve para ubicarla en el Atlas personal.
+    // Todos nulos si no aplica (objetos, fenómenos) o si el hallazgo es anterior a esta función.
+    /// <summary>"fauna", "flora" o "mineral": grupo del Atlas en el que aparece.</summary>
+    public string? GrupoAtlas { get; set; }
+    public string? Region { get; set; }
+    public double? Latitud { get; set; }
+    public double? Longitud { get; set; }
+
     public DateTime FechaCaptura { get; set; } = DateTime.UtcNow;
 }

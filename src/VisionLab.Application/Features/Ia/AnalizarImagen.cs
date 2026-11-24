@@ -29,6 +29,12 @@ public sealed record AnalisisDto
     public string? ImpactoEcologico { get; init; }
     /// <summary>Bajo, Medio o Alto.</summary>
     public string? Peligro { get; init; }
+    /// <summary>"fauna", "flora" o "mineral"; vacío si no se puede ubicar en el mapa (objetos, fenómenos).</summary>
+    public string? GrupoAtlas { get; init; }
+    /// <summary>Lugar donde vive o se encuentra de forma natural (no donde se tomó la foto).</summary>
+    public string? Region { get; init; }
+    public double? Latitud { get; init; }
+    public double? Longitud { get; init; }
     /// <summary>Solo con NivelConfianza &lt; 60: 3 identificaciones posibles. Vacío si hay confianza.</summary>
     public List<OpcionAnalisis> Opciones { get; init; } = [];
 }
@@ -88,7 +94,13 @@ public sealed class AnalizarImagenHandler(IVisionAi ia)
         return limpio.Length > MaxLongitudNombre ? limpio[..MaxLongitudNombre].TrimEnd() : limpio;
     }
 
-    internal static AnalisisDto Normalizar(AnalisisDto a) => a with
+    internal static AnalisisDto Normalizar(AnalisisDto a)
+    {
+        var u = UbicacionAtlas.Sanear(a.GrupoAtlas, a.Region, a.Latitud, a.Longitud);
+        return NormalizarBase(a) with { GrupoAtlas = u.Grupo, Region = u.Region, Latitud = u.Latitud, Longitud = u.Longitud };
+    }
+
+    private static AnalisisDto NormalizarBase(AnalisisDto a) => a with
     {
         NivelConfianza = Math.Clamp(a.NivelConfianza, 0, 100),
         Tipo = Categorias.Todas.FirstOrDefault(c => c.Equals(a.Tipo, StringComparison.OrdinalIgnoreCase)) ?? "Objetos",
