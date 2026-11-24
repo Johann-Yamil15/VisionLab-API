@@ -3,7 +3,11 @@ using VisionLab.Application.Common;
 
 namespace VisionLab.Application.Features.Ia;
 
-public sealed record AnalizarImagenRequest(string? Imagen);
+/// <summary>Elemento del Atlas 3D. Sirve para que la IA nombre igual que el catálogo.</summary>
+public sealed record ElementoCatalogo(string? NombreComun, string? NombreCientifico);
+
+/// <param name="Catalogo">Opcional: nombres del Atlas. La IA los usa tal cual si el sujeto es claramente uno de ellos.</param>
+public sealed record AnalizarImagenRequest(string? Imagen, List<ElementoCatalogo>? Catalogo = null);
 
 /// <summary>Una identificación alternativa, para cuando la IA no está segura.</summary>
 public sealed record OpcionAnalisis(string Tipo, string NombreComun, string NombreCientifico);
@@ -33,6 +37,8 @@ public sealed class AnalizarImagenHandler(IVisionAi ia)
 {
     public const int MaxBytes = 5 * 1024 * 1024;
     public const int UmbralConfianza = 60;
+    public const int MaxCatalogo = 60;
+    public const int MaxLongitudNombre = 80;
 
     public async Task<Result<AnalisisDto>> Handle(AnalizarImagenRequest request, CancellationToken ct)
     {
@@ -48,13 +54,38 @@ public sealed class AnalizarImagenHandler(IVisionAi ia)
 
         try
         {
-            var analisis = await ia.AnalizarAsync(bytes, extension, ct);
+            var analisis = await ia.AnalizarAsync(bytes, extension, LimpiarCatalogo(request.Catalogo), ct);
             return Result<AnalisisDto>.Success(Normalizar(analisis));
         }
         catch (IaNoDisponibleException ex)
         {
             return Result<AnalisisDto>.Failure(ErrorType.ServiceUnavailable, ex.Message);
         }
+    }
+
+    /// <summary>
+    /// El catálogo viene del cliente y termina dentro del prompt: se trata como dato no confiable.
+    /// Se limita la cantidad y el largo, se quitan saltos de línea y caracteres de control y se descartan
+    /// entradas vacías o repetidas.
+    /// </summary>
+    internal static IReadOnlyList<ElementoCatalogo> LimpiarCatalogo(List<ElementoCatalogo>? catalogo)
+    {
+        if (catalogo is null) return [];
+
+        return catalogo
+            .Select(e => new ElementoCatalogo(LimpiarNombre(e?.NombreComun), LimpiarNombre(e?.NombreCientifico)))
+            .Where(e => e.NombreComun.Length > 0)
+            .DistinctBy(e => e.NombreComun, StringComparer.OrdinalIgnoreCase)
+            .Take(MaxCatalogo)
+            .ToList();
+    }
+
+    private static string LimpiarNombre(string? texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto)) return "";
+        var limpio = new string(texto.Select(c => char.IsControl(c) ? ' ' : c).ToArray());
+        limpio = string.Join(' ', limpio.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        return limpio.Length > MaxLongitudNombre ? limpio[..MaxLongitudNombre].TrimEnd() : limpio;
     }
 
     internal static AnalisisDto Normalizar(AnalisisDto a) => a with
